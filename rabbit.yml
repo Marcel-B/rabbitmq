@@ -7,8 +7,6 @@ services:
             - RABBITMQ_DEFAULT_PASS_FILE=/run/secrets/rabbit_pass
             - RABBITMQ_ERLANG_COOKIE_FILE=/run/secrets/rabbit_cookie
             - HOSTNAME=rabbitmq
-            - RABBITMQ_LOGS=/var/log/rabbitmq/log
-            #- RABBITMQ_LOG_BASE=/home/logger
         secrets:
             - rabbit_user
             - rabbit_pass

@@ -1,0 +1,60 @@
+version: '3.7'
+services:
+    rabbitmq:
+        image: rabbitmq:3-management
+        environment:
+            - RABBITMQ_DEFAULT_USER_FILE=/run/secrets/rabbit_user
+            - RABBITMQ_DEFAULT_PASS_FILE=/run/secrets/rabbit_pass
+            - RABBITMQ_ERLANG_COOKIE_FILE=/run/secrets/rabbit_cookie
+            - HOSTNAME=rabbitmq
+        secrets:
+            - rabbit_user
+            - rabbit_pass
+            - rabbit_cookie
+        volumes:
+            - rabbitmq_volume:/var/lib/rabbitmq
+            - /home/marcel/logs/rabbitmq:/var/log
+        networks:
+            - skynet
+        ports:
+            - 15672:15672
+            - 5672:5672
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: on-failure
+            placement:
+                constraints: [node.role == manager]
+            labels:
+                - "traefik.enable=true"
+
+                # - "traefik.http.middlewares.https-only.redirectscheme.scheme=https"
+                # - "traefik.http.routers.rabbit-http.entrypoints=web"
+                # - "traefik.http.routers.rabbit-http.rule=Host(`rabbitmq.qaybe.de`)"
+                # - "traefik.http.routers.rabbit-http.middlewares=https-only@docker"
+                # - "traefik.http.routers.rabbit-http.service=rabbitmq"
+
+                - "traefik.http.routers.rabbitmq.entrypoints=websecure"
+                - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.qaybe.de`)"
+                - "traefik.http.routers.rabbitmq.tls=true"
+                - "traefik.http.routers.rabbitmq.tls.certresolver=sec"
+                - "traefik.http.routers.rabbitmq.service=rabbitmq"
+                - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+
+                #- "traefik.tcp.routers.mq-connect.rule=HostSNI(`mq-connect.qaybe.de`)"
+                #- "traefik.tcp.routers.mq-connect.entrypoints=rabbitmq"
+                #- "traefik.tcp.routers.mq-connect.service=mq-connect"
+                #- "traefik.tcp.routers.mq-connect.tls.certresolver=sec"
+                #- "traefik.tcp.services.mq-connect.loadbalancer.server.port=5672"
+secrets:
+    rabbit_pass:
+        external: true
+    rabbit_user:
+        external: true
+    rabbit_cookie:
+        external: true
+volumes:
+    rabbitmq_volume:
+networks:
+    skynet:
+        external: true
